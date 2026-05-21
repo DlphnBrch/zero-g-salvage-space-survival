@@ -8,6 +8,7 @@ export class Input {
     this.mouseJustDown = false;
     this.mouseJustUp = false;
     this.pointerLocked = false;
+    this.pointerUnlockedThisFrame = false;
 
     const preventGameplayDefaults = new Set([
         'Space',
@@ -18,7 +19,8 @@ export class Input {
         'KeyS',
         'KeyD',
         'KeyQ',
-        'KeyE'
+        'KeyE',
+        'Escape'
     ]);
 
     window.addEventListener('keydown', (event) => {
@@ -50,7 +52,12 @@ export class Input {
     });
 
     document.addEventListener('pointerlockchange', () => {
+      const wasPointerLocked = this.pointerLocked;
       this.pointerLocked = document.pointerLockElement === domElement;
+      if (wasPointerLocked && !this.pointerLocked) {
+        this.pointerUnlockedThisFrame = true;
+        this.mouseDown = false;
+      }
     });
   }
 
@@ -74,5 +81,6 @@ export class Input {
     this.mouseDelta.y = 0;
     this.mouseJustDown = false;
     this.mouseJustUp = false;
+    this.pointerUnlockedThisFrame = false;
   }
 }

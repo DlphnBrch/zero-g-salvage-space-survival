@@ -25,6 +25,7 @@ export class Game {
     this.clock = new THREE.Clock();
     this.accumulator = 0;
     this.wasGameOver = false;
+    this.paused = false;
 
     const { settings, toggleGui } = createSettings();
     this.settings = settings;
@@ -49,6 +50,7 @@ export class Game {
     this.flashlight = new FlashlightController(scene, camera, settings);
     this.hud = new HUD(this.gameState, () => this.restart());
     this.hud.setPlayer(this.player);
+    this.hud.setPaused(this.paused);
 
     this.itemManager = new ItemManager(scene, this.world, this.gameState, settings);
     this.itemManager.spawnInitialItems();
@@ -71,10 +73,42 @@ export class Game {
     this.accumulator = 0;
     this.clock.getDelta();
     this.wasGameOver = false;
+    this.paused = false;
+    this.hud.setPaused(this.paused);
     this.hud.showFeedback('Mission restarted');
   }
 
+  setPaused(paused) {
+    if (this.gameState.gameOver) return;
+    this.paused = paused;
+    this.hud.setPaused(paused);
+
+    if (paused) {
+      this.input.unlockPointer();
+      this.clock.getDelta();
+      this.hud.showFeedback('Game paused');
+    } else {
+      this.clock.getDelta();
+      this.hud.showFeedback('Game resumed');
+    }
+  }
+
   handleInteractions() {
+    if (this.input.wasPressed('Escape')) {
+      this.setPaused(!this.paused);
+      return;
+    }
+
+    if (!this.paused && this.input.pointerUnlockedThisFrame) {
+      this.setPaused(true);
+      return;
+    }
+
+    if (this.paused) {
+      if (this.input.mouseJustDown) this.setPaused(false);
+      return;
+    }
+
     if (this.input.wasPressed('KeyG')) {
       const visible = this.toggleGui();
       this.hud.showFeedback(visible ? 'Settings panel opened' : 'Settings panel hidden');
@@ -133,8 +167,16 @@ export class Game {
 
   update() {
     const delta = Math.min(this.clock.getDelta(), MAX_DELTA);
+    const wasPaused = this.paused;
 
     this.handleInteractions();
+    if (this.paused || wasPaused) {
+      this.hud.update(0, this.scanner.cooldown);
+      this.renderer.render(this.scene, this.camera);
+      this.input.endFrame();
+      return;
+    }
+
     this.player.update(delta);
     this.flashlight.update();
 

@@ -17,7 +17,7 @@ export class PlayerController {
     this.yaw = Math.PI;
     this.mouseSensitivity = 0.0022;
     this.throwCharge = 0;
-    this.maxThrowCharge = 2.2;
+    this.throwCharging = false;
     this.heldItem = null;
 
     this.body = new CANNON.Body({
@@ -39,6 +39,7 @@ export class PlayerController {
     this.yaw = Math.PI;
     this.heldItem = null;
     this.throwCharge = 0;
+    this.throwCharging = false;
   }
 
   setHeldItem(item) {
@@ -48,6 +49,8 @@ export class PlayerController {
     item.body.velocity.set(0, 0, 0);
     item.body.angularVelocity.set(0, 0, 0);
     item.body.collisionResponse = false;
+    this.throwCharge = 0;
+    this.throwCharging = false;
   }
 
   dropHeldItem() {
@@ -57,38 +60,49 @@ export class PlayerController {
     item.body.collisionResponse = true;
     this.heldItem = null;
     this.throwCharge = 0;
+    this.throwCharging = false;
     return item;
   }
 
   throwHeldItem() {
     if (!this.heldItem) return null;
 
-    const item = this.dropHeldItem();
+    const item = this.heldItem;
     const forward = cameraForward(this.camera);
-    const charge = Math.max(0.35, this.throwCharge);
-    const force = this.settings.throwForceMultiplier * charge;
+    const maxCharge = this.settings.maxThrowCharge;
+    const charge = Math.min(maxCharge, Math.max(this.settings.minThrowCharge, this.throwCharge));
+    const throwSpeed = this.settings.throwSpeedMultiplier * charge;
+
+    item.held = false;
+    item.body.collisionResponse = true;
+    this.heldItem = null;
 
     item.body.position.set(
-      this.camera.position.x + forward.x * 2.2,
-      this.camera.position.y + forward.y * 2.2,
-      this.camera.position.z + forward.z * 2.2
+      this.camera.position.x + forward.x * this.settings.holdDistance,
+      this.camera.position.y + forward.y * this.settings.holdDistance,
+      this.camera.position.z + forward.z * this.settings.holdDistance
     );
 
-    // cannon-es impulse uses mass, so heavy/large items accelerate less than small items.
-    item.body.applyImpulse(
-      new CANNON.Vec3(forward.x * force, forward.y * force, forward.z * force),
-      item.body.position
+    item.body.velocity.set(
+      this.body.velocity.x + forward.x * throwSpeed,
+      this.body.velocity.y + forward.y * throwSpeed,
+      this.body.velocity.z + forward.z * throwSpeed
     );
+    item.body.angularVelocity.set(0, 0, 0);
+    item.body.angularDamping = this.settings.itemAngularDamping;
+    item.body.sleepState = CANNON.Body.AWAKE;
+    item.body.wakeUp();
 
     this.throwCharge = 0;
+    this.throwCharging = false;
     return item;
   }
 
-  applyThrust(direction, delta, multiplier = 1) {
+  applyThrust(direction, delta, multiplier = 1, fuelCost = this.settings.movementFuelCost) {
     if (this.gameState.fuel <= 0) return;
 
-    const fuelCost = 10 * multiplier * delta;
-    if (!this.gameState.useFuel(fuelCost)) return;
+    const fuelAmount = fuelCost * multiplier * delta;
+    if (!this.gameState.useFuel(fuelAmount)) return;
 
     const force = this.settings.playerThrustForce * multiplier;
     this.body.applyForce(
@@ -133,12 +147,17 @@ export class PlayerController {
       const boost = this.input.isDown('AltLeft') || this.input.isDown('AltRight')
         ? this.settings.boostMultiplier
         : 0.8;
-      this.applyThrust(thrust, delta, boost);
+      this.applyThrust(thrust, delta, boost, this.settings.movementFuelCost);
     }
 
     // Main extinguisher spray: spray forward, move backward.
     if (!this.heldItem && (this.input.mouseDown || this.input.isDown('Space'))) {
-      this.applyThrust(forward.clone().multiplyScalar(-1), delta, 1.15);
+      this.applyThrust(
+        forward.clone().multiplyScalar(-1),
+        delta,
+        1.15,
+        this.settings.extinguisherFuelCost
+      );
     }
   }
 
@@ -146,19 +165,27 @@ export class PlayerController {
     if (!this.heldItem) return;
 
     const forward = cameraForward(this.camera);
-    const holdPosition = this.camera.position.clone().add(forward.multiplyScalar(2.1));
+    const holdPosition = this.camera.position.clone().add(forward.multiplyScalar(this.settings.holdDistance));
 
     this.heldItem.body.position.set(holdPosition.x, holdPosition.y - 0.15, holdPosition.z);
     this.heldItem.body.velocity.set(0, 0, 0);
+    this.heldItem.body.angularVelocity.set(0, 0, 0);
+    this.heldItem.body.quaternion.copy(this.camera.quaternion);
     this.heldItem.mesh.position.copy(this.heldItem.body.position);
     this.heldItem.mesh.quaternion.copy(this.camera.quaternion);
 
-    if (this.input.mouseDown) {
-      this.throwCharge = Math.min(this.maxThrowCharge, this.throwCharge + delta);
+    if (this.input.mouseJustDown) {
+      this.throwCharging = true;
+      this.throwCharge = 0;
     }
 
-    if (this.input.mouseJustUp) {
+    if (this.throwCharging && this.input.mouseDown) {
+      this.throwCharge = Math.min(this.settings.maxThrowCharge, this.throwCharge + delta);
+    }
+
+    if (this.throwCharging && !this.input.mouseDown) {
       this.throwHeldItem();
+      return;
     }
   }
 

@@ -143,6 +143,7 @@ export class ItemManager {
   
     this.items.forEach((item) => {
       if (!item.held) {
+        item.body.angularDamping = this.settings.itemAngularDamping;
         if (this.settings.selfFriction) {
           applySelfFriction(item.body, this.settings.selfFrictionStrength, delta);
         }

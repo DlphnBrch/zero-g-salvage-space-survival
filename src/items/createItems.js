@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { ITEM_TYPES } from '../utils/constants.js';
-import { GLTFLoader } from '/lib/three/addons/loaders/GLTFLoader.js';
 
 function makeStripedBox(width, height, depth, color, stripeColor) {
 	const group = new THREE.Group();
@@ -17,12 +16,29 @@ function makeStripedBox(width, height, depth, color, stripeColor) {
 	group.add(stripe);
 	return group;
 }
-function loadMesh(path){
+function makeDebris(scale, material) {
 	const group = new THREE.Group();
-	const gltfLoader = new GLTFLoader();
-	gltfLoader.load(path, ( gltf ) => {
-		group.add(gltf.scene);
-	});
+	const core = new THREE.Mesh(new THREE.DodecahedronGeometry(0.55 * scale, 0), material);
+	core.scale.set(1.4, 0.8, 0.95);
+	group.add(core);
+
+	const shardMaterial = material.clone();
+	shardMaterial.color.offsetHSL(0, 0, 0.08);
+
+	for (let i = 0; i < 3; i += 1) {
+		const shard = new THREE.Mesh(
+			new THREE.TetrahedronGeometry((0.22 + i * 0.05) * scale, 0),
+			shardMaterial
+		);
+		shard.position.set(
+			(i - 1) * 0.38 * scale,
+			(i % 2 === 0 ? 0.22 : -0.18) * scale,
+			(i - 1) * -0.2 * scale
+		);
+		shard.rotation.set(i * 0.9, i * 0.45, i * 0.7);
+		group.add(shard);
+	}
+
 	return group;
 }
 export function createItemMesh(type, definition) {
@@ -54,8 +70,7 @@ export function createItemMesh(type, definition) {
 			mesh = makeStripedBox(1.2 * scale, 1.2 * scale, 1.2 * scale, definition.color, 0xf6c66f);
 			break;
 		default:
-			//mesh = new THREE.Mesh(new THREE.DodecahedronGeometry(0.65 * scale, 0), material);
-			mesh = loadMesh("/test.glb");
+			mesh = makeDebris(scale, material);
 			break;
 	}
 	

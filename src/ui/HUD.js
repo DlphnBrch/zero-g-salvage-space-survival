@@ -48,6 +48,12 @@ export class HUD {
 
       <div id="warning"></div>
       <div id="pickup-feedback"></div>
+      <div id="pause-overlay" class="hidden">
+        <div class="pause-card">
+          <h2>PAUSED</h2>
+          <p>Click to resume</p>
+        </div>
+      </div>
 
       <div class="hud-panel hud-help">
         <strong>Controls</strong><br />
@@ -57,7 +63,8 @@ export class HUD {
         Space/Left Click: extinguisher backward thrust<br />
         E: grab/drop - Hold/Release Left Click: throw<br />
         C: consume held resource - F: flashlight<br />
-        R: scanner ping - G: settings panel
+        R: scanner ping - G: settings panel<br />
+        Esc: pause
       </div>
 
       <div id="game-over" class="hidden">
@@ -92,6 +99,7 @@ export class HUD {
       throwChargeFill: document.querySelector('#throw-charge-fill'),
       warning: document.querySelector('#warning'),
       feedback: document.querySelector('#pickup-feedback'),
+      pauseOverlay: document.querySelector('#pause-overlay'),
       gameOver: document.querySelector('#game-over'),
       gameOverReason: document.querySelector('#game-over-reason'),
       restartButton: document.querySelector('#restart-button')
@@ -106,6 +114,10 @@ export class HUD {
 
   setPlayer(player) {
     this.player = player;
+  }
+
+  setPaused(paused) {
+    this.elements.pauseOverlay.classList.toggle('hidden', !paused);
   }
 
   setBar(element, valueElement, value) {
@@ -134,7 +146,7 @@ export class HUD {
     }
 
     const chargePercent = Math.round(
-      (this.player.throwCharge / this.player.maxThrowCharge) * 100
+      (this.player.throwCharge / this.player.settings.maxThrowCharge) * 100
     );
 
     this.elements.held.textContent = `${this.player.heldItem.label} - Throw ${chargePercent}%`;
