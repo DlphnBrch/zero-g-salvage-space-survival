@@ -19,10 +19,9 @@ export class HUD {
     this.player = null;
 
     this.root = document.createElement('div');
-    document.getElementById('sidebysidefacilitator').appendChild(this.root);
     this.root.id = 'hud';
     this.root.innerHTML = `
-      <div class="hud-panel hud-left" style ="float: left;">
+      <div class="hud-panel hud-left">
         <h1>ZERO-G SALVAGE</h1>
         ${barHTML('hunger-bar', 'Hunger')}
         ${barHTML('thirst-bar', 'Thirst')}
@@ -31,7 +30,7 @@ export class HUD {
         <div class="hud-stat"><span>Survival Time</span><strong id="timer">00:00</strong></div>
         <div class="hud-stat"><span>Score</span><strong id="score">0</strong></div>
         <div class="hud-stat"><span>Stored Items</span><strong id="stored">0</strong></div>
-        <div class="hud-stat wide"><span>Inventory</span><strong id="inventory">F:0 W:0 O₂:0 Ext:0 Cr:0</strong></div>
+        <div class="hud-stat wide"><span>Inventory</span><strong id="inventory">F:0 W:0 O2:0 Ext:0 Cr:0</strong></div>
         <div class="hud-stat"><span>Scanner</span><strong id="scanner">READY</strong></div>
         <div class="hud-stat"><span>Nearest Supply</span><strong id="nearest">--</strong></div>
         <div class="hud-stat"><span>Velocity</span><strong id="velocity">0.0 m/s</strong></div>
@@ -52,13 +51,13 @@ export class HUD {
 
       <div class="hud-panel hud-help">
         <strong>Controls</strong><br />
-        Click: mouse lock · Mouse: look<br />
+        Click: mouse lock - Mouse: look<br />
         WASD: horizontal/forward thrust<br />
-        X: up · Z: down · Alt: boost<br />
+        X: up - Z: down - Alt: boost<br />
         Space/Left Click: extinguisher backward thrust<br />
-        E: grab/drop · Hold/Release Left Click: throw<br />
-        C: consume held resource · F: flashlight<br />
-        R: scanner ping · G: settings panel
+        E: grab/drop - Hold/Release Left Click: throw<br />
+        C: consume held resource - F: flashlight<br />
+        R: scanner ping - G: settings panel
       </div>
 
       <div id="game-over" class="hidden">
@@ -138,7 +137,7 @@ export class HUD {
       (this.player.throwCharge / this.player.maxThrowCharge) * 100
     );
 
-    this.elements.held.textContent = `${this.player.heldItem.label} · Throw ${chargePercent}%`;
+    this.elements.held.textContent = `${this.player.heldItem.label} - Throw ${chargePercent}%`;
 
     const isCharging = this.player.throwCharge > 0.03;
 
@@ -178,7 +177,7 @@ export class HUD {
 
     if (state.gameOver) {
       this.elements.gameOver.classList.remove('hidden');
-      this.elements.gameOverReason.textContent = `${state.gameOverReason} · Final time: ${formatTime(state.time)} · Score: ${state.score}`;
+      this.elements.gameOverReason.textContent = `${state.gameOverReason} - Final time: ${formatTime(state.time)} - Score: ${state.score}`;
     } else {
       this.elements.gameOver.classList.add('hidden');
     }

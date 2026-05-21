@@ -23,7 +23,7 @@ function loadMesh(path){
 	gltfLoader.load(path, ( gltf ) => {
 		group.add(gltf.scene);
 	});
-	return group;/
+	return group;
 }
 export function createItemMesh(type, definition) {
 	const scale = definition.scale ?? 1;
