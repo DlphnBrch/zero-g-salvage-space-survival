@@ -55,7 +55,7 @@ export class PlayerController {
 
       if (enabled) {
         child.castShadow = child.userData.shadowState.castShadow;
-        child.receiveShadow = child.userData.shadowState.receiveShadow;
+        child.receiveShadow = false;
         return;
       }
 

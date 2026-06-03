@@ -37,7 +37,7 @@ function applyItemMaterialSettings(mesh, definition) {
 	mesh.traverse((child) => {
 		if (!child.isMesh) return;
 		child.castShadow = true;
-		child.receiveShadow = true;
+		child.receiveShadow = false;
 		if (child.material?.emissive) {
 			child.material.emissive.setHex(definition.emissive);
 			child.material.emissiveIntensity = 0.25;
