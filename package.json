@@ -1,0 +1,19 @@
+{
+  "name": "zero-g-salvage-space-survival",
+  "version": "1.0.0",
+  "description": "A playable WebGL 3D zero-gravity survival prototype using Three.js, cannon-es, lil-gui and Vite.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "cannon-es": "^0.20.0",
+    "lil-gui": "^0.19.2",
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
